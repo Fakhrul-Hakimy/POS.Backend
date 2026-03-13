@@ -1,12 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using PosSystem.Application.Interfaces;
 using PosSystem.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace PosSystem.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/Auth")]
+
+
+   
     public class AuthControllers : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -14,6 +18,17 @@ namespace PosSystem.Api.Controllers
         public AuthControllers(IAuthService authService)
         {
             _authService = authService;
+        }
+
+        [Authorize]
+        [HttpGet("verify")]
+        public IActionResult VerifySession()
+        {
+            // If the code reaches here, it means the JWT in the cookie is VALID.
+            return Ok(new { 
+                authenticated = true, 
+                user = User.Identity?.Name 
+            });
         }
 
         [HttpPost("register")]
@@ -27,16 +42,32 @@ namespace PosSystem.Api.Controllers
             return Ok(result);
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+    {
+        // Rename variable to 'result' to make it clear it's an object
+        var result = await _authService.LoginAsync(loginDto.Email!, loginDto.Password!);
+        
+        if (!result.Success || result.Token == null)
         {
-            var result = await _authService.LoginAsync(loginDto.Email!, loginDto.Password!);
-            if (result == null)
-            {
-                return BadRequest("Login failed.");
-            }
-            return Ok(result);
-        }
+            return BadRequest("Login failed.");
+        }else{
+
+            var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false, // MUST be false for http://127.0.0.1
+                    SameSite = SameSiteMode.Lax, // Lax is more forgiving for local dev
+                    Expires = DateTime.UtcNow.AddDays(1),
+                    Path = "/" // Ensure it is available for all paths
+                };
+
+            Response.Cookies.Append("jwt_token", result.Token, cookieOptions); 
+
+            return Ok(new { success = true, message = "Logged in successfully" });
+    }
+    }
+
 
     }
 }
