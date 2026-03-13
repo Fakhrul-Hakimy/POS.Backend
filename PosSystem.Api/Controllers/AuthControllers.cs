@@ -16,6 +16,27 @@ namespace PosSystem.Api.Controllers
             _authService = authService;
         }
 
-       
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
+        {
+            var result = await _authService.RegisterAsync(registerDto.Name!, registerDto.Email!, registerDto.Password!);
+            if (result == null)
+            {
+                return BadRequest("Registration failed.");
+            }
+            return Ok(result);
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        {
+            var result = await _authService.LoginAsync(loginDto.Email!, loginDto.Password!);
+            if (result == null)
+            {
+                return BadRequest("Login failed.");
+            }
+            return Ok(result);
+        }
+
     }
 }
