@@ -22,21 +22,27 @@ namespace PosSystem.Application.Service
         }
 
 
-        public Task<AuthResponse> LoginAsync(string email, string password){
+        public async Task<AuthResponse> LoginAsync(string email, string password){
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
-                return Task.FromResult(new AuthResponse { Success = false, Message = "Email and password are required." });
+                return (new AuthResponse { Success = false, Message = "Email and password are required." });
             }
 
-            var user = _context.Users.FirstOrDefault(u => u.Email == email);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash
                 ))
             {
-                return Task.FromResult(new AuthResponse { Success = false, Message = "Invalid email or password." });
+                return (new AuthResponse { Success = false, Message = "Invalid email or password." });
             }
 
             var token = GenerateJwtToken(user);
-            return Task.FromResult(new AuthResponse { Success = true, Token = token });
+
+            user.lastLogin = DateTime.UtcNow+TimeSpan.FromHours(8); // Adjust for UTC+8 timezone
+            await _context.SaveChangesAsync();
+
+
+      
+            return (new AuthResponse { Success = true, Token = token, Role = user.Role });
         }
         public async Task<object?> RegisterAsync(string name, string email, string password){
              // check if user with the same email already exists

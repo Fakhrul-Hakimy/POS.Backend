@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using PosSystem.Application.Interfaces;
 using PosSystem.Application.DTOs;
 using Microsoft.AspNetCore.Authorization;
-
+using System.Security.Claims;
 
 namespace PosSystem.Api.Controllers
 {
@@ -27,7 +27,8 @@ namespace PosSystem.Api.Controllers
             // If the code reaches here, it means the JWT in the cookie is VALID.
             return Ok(new { 
                 authenticated = true, 
-                user = User.Identity?.Name 
+                user = User.Identity?.Name,
+                role = User.FindFirst(ClaimTypes.Role)?.Value
             });
         }
 
@@ -64,7 +65,7 @@ namespace PosSystem.Api.Controllers
 
             Response.Cookies.Append("jwt_token", result.Token, cookieOptions); 
 
-            return Ok(new { success = true, message = "Logged in successfully" });
+            return Ok(new { success = true, message = "Logged in successfully", role = result.Role });
     }
     }
 
