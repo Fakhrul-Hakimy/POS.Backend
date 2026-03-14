@@ -58,6 +58,7 @@ namespace PosSystem.Application.Service
                 Email = email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
                 Role = "User" // default role
+
             };
             _context.Users.Add(user);
             await _context.SaveChangesAsync();

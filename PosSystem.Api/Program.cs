@@ -7,6 +7,7 @@ using PosSystem.Infrastructure.Data;
 using System.Text;
 using Scalar.AspNetCore;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -68,6 +69,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IAppDbContext>(provider => provider.GetService<AppDbContext>()!);
 var app = builder.Build();
 
