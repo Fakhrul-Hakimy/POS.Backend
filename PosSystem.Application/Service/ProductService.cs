@@ -60,6 +60,89 @@ namespace PosSystem.Application.Service
 
             return await Task.FromResult<object?>(products);
         }
+
+        public async Task<bool?> EditProduct(updateProductDto dto, int id, string UpdateBy)
+        {
+            try
+            {
+                var product= await _context.Products.FindAsync(id);
+                if (product == null)
+                {
+                    return false;
+                }
+                else
+                {
+                    product.Name=dto.Name;
+                    product.Description=dto.Description;
+                    product.Price=dto.Price;
+                    product.CategoryId=dto.CategoryId;
+                    product.UpdatedBy=UpdateBy;
+                    product.UpdatedAt=DateTime.UtcNow+TimeSpan.FromHours(8);
+
+                    _context.Products.Update(product);
+                    var result= await _context.SaveChangesAsync();
+
+                    return result >0;
+
+                }
+                
+            }catch(Exception e)
+            {
+                Console.Write("Error "+e);
+                return false;
+            }
+        }
+
+        public async Task<bool?> DeleteProduct(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+
+            if (product == null)
+            {
+                return false;
+            }
+            else
+            {
+                _context.Products.Remove(product);
+                var result= await _context.SaveChangesAsync();
+
+                return result >0;
+            }
+        }
+
+        public async Task<object?> GetProductById(int id)
+        {
+            try
+            {
+                var product = await _context.Products
+                    .AsNoTracking()
+                    .Where(p => p.Id == id)
+                    .Select(p => new ToListProductDto
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        Price = p.Price,
+                        Description= p.Description,
+                        CategoryId = p.CategoryId,
+                        CategoryName = p.Category != null ? p.Category.Name : null
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (product == null)
+                {
+                    return false;
+                }
+                else
+                {
+                    return product;
+                }
+                
+            }catch(Exception e)
+            {
+                Console.Write("Error : "+e);
+                return false;
+            }
+        }
         
     }
 
